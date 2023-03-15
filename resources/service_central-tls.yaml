@@ -1,0 +1,17 @@
+apiVersion: v1
+kind: Service
+metadata:
+  annotations:
+    argocd.argoproj.io/sync-wave: "1"
+    service.beta.openshift.io/serving-cert-secret-name: central-default-tls-cert
+  name: central-tls
+  namespace: company-rhacs
+spec:
+  selector:
+    app: central
+  type: ClusterIP
+  ports:
+  - name: https
+    port: 443
+    protocol: TCP
+    targetPort: 8443

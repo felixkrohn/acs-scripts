@@ -1,0 +1,41 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  annotations:
+    argocd.argoproj.io/sync-wave: "5"
+  name: create-oauth-auth-provider
+  namespace: company-rhacs
+spec:
+  template:
+    spec:
+      containers:
+        - image: image-registry.openshift-image-registry.svc:5000/company-rhacs/roxctl:latest
+          name: create-oauth-auth-provider
+          env:
+# NB: CLUSTERNAME env is added by cluster-specific kustomize patch
+          - name: PASSWORD
+            valueFrom:
+              secretKeyRef:
+                name: central-htpasswd
+                key: password
+          - name: NAMESPACE
+            valueFrom:
+              fieldRef:
+                fieldPath: metadata.namespace
+          command:
+            - /bin/bash
+            - /scripts/create-loginprovider.sh
+          imagePullPolicy: Always
+          volumeMounts:
+          - mountPath: /scripts
+            name: scripts
+            readOnly: true
+      dnsPolicy: ClusterFirst
+      restartPolicy: Never
+      serviceAccountName: rhacs-jobs-user
+      terminationGracePeriodSeconds: 30
+      volumes:
+      - configMap:
+          defaultMode: 420
+          name: scripts
+        name: scripts

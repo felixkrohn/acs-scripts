@@ -1,0 +1,20 @@
+apiVersion: image.openshift.io/v1
+kind: ImageStream
+metadata:
+  labels:
+    app: roxctl
+  name: ubi
+  namespace: company-rhacs
+spec:
+  lookupPolicy:
+    local: false
+  tags:
+  - annotations:
+      openshift.io/imported-from: registry.access.redhat.com/ubi9/ubi:latest
+    from:
+      kind: DockerImage
+      name: registry.company.tld/ubi9/ubi:latest
+    importPolicy: {}
+    name: latest
+    referencePolicy:
+      type: Source

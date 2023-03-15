@@ -1,0 +1,40 @@
+apiVersion: build.openshift.io/v1
+kind: BuildConfig
+metadata:
+  labels:
+    app: roxctl
+  name: roxctl
+  namespace: company-rhacs
+spec:
+  output:
+    to:
+      kind: ImageStreamTag
+      name: roxctl:latest
+  postCommit: {}
+  resources: {}
+  source:
+    dockerfile: |
+      FROM registry.access.redhat.com/ubi9/ubi:latest
+      RUN curl -O https://mirror.openshift.com/pub/rhacs/assets/latest/bin/Linux/roxctl \
+        && curl ${OCURL} | tar xv \
+        && chmod +x roxctl oc \
+        && mv roxctl oc /usr/local/bin \
+        && yum -y install jq
+      RUN useradd -ms /bin/bash rhacs
+      USER rhacs
+    type: Dockerfile
+  strategy:
+    dockerStrategy:
+      env:
+# NB: CLUSTERNAME env is added by cluster-specific kustomize patch
+        - name: dummy
+          value: "dummy"
+      from:
+        kind: ImageStreamTag
+        name: cli:latest
+        namespace: openshift
+    type: Docker
+  triggers:
+  - type: ConfigChange
+  - imageChange: {}
+    type: ImageChange

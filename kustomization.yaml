@@ -1,0 +1,105 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+resources:
+  - policies/
+  - resources/*
+
+configMapGenerator:
+  - name: scripts
+    namespace: company-rhacs
+    files:
+      - bin/create-gitops-token.sh
+      - bin/create-company-audit-rhacs-api-token.sh
+      - bin/create-initbundle.sh
+      - bin/create-loginprovider.sh
+      - bin/load-policies.sh
+      - bin/write-policy-configmap-files.sh
+generatorOptions:
+  disableNameSuffixHash: true
+
+labels:
+- pairs:
+    company.io/teamname-managed: "true"
+  includeSelectors: false
+
+patchesJson6902:
+
+# Jobs
+  - target:
+      group: batch
+      version: v1
+      kind: Job
+      namespace: company-rhacs
+      name: create-initbundle
+    patch: |-
+      - op: add
+        path: /spec/template/spec/containers/0/env/-
+        value:
+          name: CLUSTERNAME
+          value: dev-cluster
+
+  - target:
+      group: batch
+      version: v1
+      kind: Job
+      name: create-oauth-auth-provider
+      namespace: company-rhacs
+    patch: |-
+      - op: add
+        path: /spec/template/spec/containers/0/env/-
+        value:
+          name: CLUSTERNAME
+          value: dev-cluster
+  - target:
+      group: batch
+      version: v1
+      kind: Job
+      name: create-gitops-api-token
+      namespace: company-rhacs
+    patch: |-
+      - op: add
+        path: /spec/template/spec/containers/0/env/-
+        value:
+          name: CLUSTERNAME
+          value: dev-cluster
+  - target:
+      group: batch
+      version: v1
+      kind: Job
+      name: create-company-audit-rhacs-api-token
+      namespace: company-rhacs
+    patch: |-
+      - op: add
+        path: /spec/template/spec/containers/0/env/-
+        value:
+          name: CLUSTERNAME
+          value: dev-cluster
+
+# Cronjobs
+  - target:
+      group: batch
+      version: v1
+      kind: CronJob
+      name: load-policies
+      namespace: company-rhacs
+    patch: |-
+      - op: add
+        path: /spec/jobTemplate/spec/template/spec/containers/0/env/-
+        value:
+          name: CLUSTERNAME
+          value: dev-cluster
+
+# Buildconfig
+  - target:
+      group: build.openshift.io
+      version: v1
+      kind: BuildConfig
+      name: roxctl
+      namespace: company-rhacs
+    patch: |-
+      - op: add
+        path: /spec/strategy/dockerStrategy/env/-
+        value:
+          name: OCURL
+          value: https://downloads-openshift-console.apps.dev-cluster.COMPANY URL REMOVED/amd64/linux/oc.tar

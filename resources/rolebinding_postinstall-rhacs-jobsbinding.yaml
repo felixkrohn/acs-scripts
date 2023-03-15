@@ -1,0 +1,16 @@
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  annotations:
+    argocd.argoproj.io/sync-wave: "1"
+  creationTimestamp: null
+  name: postinstall-rhacs-jobsbinding
+  namespace: company-rhacs
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: postinstall-rhacs-jobs
+subjects:
+- kind: ServiceAccount
+  name: rhacs-jobs-user
+  namespace: company-rhacs
